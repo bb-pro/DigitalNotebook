@@ -62,13 +62,13 @@ class SettingsVC: BaseViewController {
     }
     
     @IBAction func bottomButtons(_ sender: UIButton) {
-        for btn in bottomButtons {
-            if btn.tag == sender.tag {
-                btn.alpha = 0.5
-            } else {
-                btn.alpha = 1.0
-            }
-        }
+//        for btn in bottomButtons {
+//            if btn.tag == sender.tag {
+//                btn.alpha = 0.5
+//            } else {
+//                btn.alpha = 1.0
+//            }
+//        }
         
         switch sender.tag {
         case 0:
@@ -85,31 +85,34 @@ class SettingsVC: BaseViewController {
             userEmailTextField.isUserInteractionEnabled = false
         case 2:
             if let email = CrownNotesAPI.shared.email {
-                CrownNotesAPI.shared.deleteUser(email: email, password: CrownNotesAPI.shared.password!) { result in
-                    switch result {
-                    case .success(let message):
-                        print("✅ Success: \(message)")
-                        DispatchQueue.main.async {
-                            self.popToTopViewController()
-                            self.showAlertMessage(title: "Account Deleted", message: "Your account has been deleted")
-                        }
-                    case .failure(let error):
-                        print("❌ Error: \(error.localizedDescription)")
-                        DispatchQueue.main.async {
-                            self.showAlertMessage(title: "Deletion Failed", message: error.localizedDescription)
+                presentAlert(title: "Account Deletion", message: "Are you sure you want to delete your account") {
+                    CrownNotesAPI.shared.deleteUser(email: email, password: CrownNotesAPI.shared.password!) { result in
+                        switch result {
+                        case .success(let message):
+                            print("✅ Success: \(message)")
+                            DispatchQueue.main.async {
+                                self.popToTopViewController()
+                            }
+                        case .failure(let error):
+                            print("❌ Error: \(error.localizedDescription)")
+                            DispatchQueue.main.async {
+                                self.showAlertMessage(title: "Deletion Failed", message: error.localizedDescription)
+                            }
                         }
                     }
                 }
             } else {
-                popToTopViewController()
-                showAlertMessage(title: "Account Deleted", message: "Your account has been deleted")
+                presentAlert(title: "Account Deletion", message: "Are you sure you want to delete your account") {
+                    self.popToTopViewController()
+                }
             }
         case 3:
-            CrownNotesAPI.shared.email = nil
-            CrownNotesAPI.shared.name = nil
-            CrownNotesAPI.shared.password = nil
-            popToTopViewController()
-            showAlertMessage(title: "Logged out", message: "Your logged out successfully")
+            presentAlert(title: "Log Out", message: "Are you sure you want to log out your account") {
+                CrownNotesAPI.shared.email = nil
+                CrownNotesAPI.shared.name = nil
+                CrownNotesAPI.shared.password = nil
+                self.popToTopViewController()
+            }
         default:
             break
         }
@@ -139,10 +142,12 @@ extension SettingsVC: UIImagePickerControllerDelegate, UINavigationControllerDel
 extension UIViewController {
     func presentAlert(title: String, message: String, onOkTapped: (() -> Void)? = nil) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let ok = UIAlertAction(title: "OK", style: .default) { _ in
+        let yes = UIAlertAction(title: "Yes", style: .default) { _ in
             onOkTapped?()
         }
-        alert.addAction(ok)
+        let no = UIAlertAction(title: "No", style: .default)
+        alert.addAction(yes)
+        alert.addAction(no)
         self.present(alert, animated: true)
     }
 }
